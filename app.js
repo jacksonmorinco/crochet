@@ -24,7 +24,7 @@
     mirrorX: $('mirrorX'), mirrorY: $('mirrorY'), showGrid: $('showGrid'), zoom: $('zoom'), fitBtn: $('fitBtn'),
     wrap: $('canvasWrap'), inner: $('canvasInner'), grid: $('grid'), rulerTop: $('rulerTop'), rulerLeft: $('rulerLeft'),
     status: $('status'), projColors: $('projColors'), catSearch: $('catSearch'), catalog: $('catalog'),
-    customColor: $('customColor'), rowDown: $('rowDown'), rowUp: $('rowUp'), rowNum: $('rowNum'),
+    customColor: $('customColor'), packOnly: $('packOnly'), rowDown: $('rowDown'), rowUp: $('rowUp'), rowNum: $('rowNum'),
     crafting: $('crafting'), rowReadout: $('rowReadout'), undoBtn: $('undoBtn'), redoBtn: $('redoBtn'),
     exportPng: $('exportPng'), exportJson: $('exportJson'), importJson: $('importJson'), newBtn: $('newBtn'),
   };
@@ -38,7 +38,7 @@
       stitch: 'sc',
       hookMm: 10, labelHookMm: YARN.gauge.hookMm,
       useSwatch: false, swSts: YARN.gauge.sts, swRows: YARN.gauge.rows,
-      colors: [copyColor(CATALOG[0])],
+      colors: [copyColor(CATALOG.find((c) => c.name === 'Fisherman') || CATALOG[0])],
       active: 0,
       row: 1, crafting: false,
       zoom: 1, showGrid: true,
@@ -458,11 +458,15 @@
   function renderCatalog() {
     const q = els.catSearch.value.trim().toLowerCase();
     const used = new Set(S.colors.map((c) => c.name));
-    els.catalog.innerHTML = CATALOG.map((c, i) => {
+    const packOnly = els.packOnly.checked;
+    const swatch = (c, i) => {
       if (q && !(c.name.toLowerCase().includes(q) || c.code.includes(q))) return '';
       const title = `${c.name}${c.code ? ' (' + c.code + ')' : ''}`;
       return `<button class="sw${used.has(c.name) ? ' used' : ''}" data-cat="${i}" title="${esc(title)}" aria-label="${esc(title)}" style="background:${swatchBg(c)}"></button>`;
-    }).join('');
+    };
+    const pack = CATALOG.map((c, i) => (c.pack ? swatch(c, i) : '')).join('');
+    const rest = packOnly ? '' : CATALOG.map((c, i) => (c.pack ? '' : swatch(c, i))).join('');
+    els.catalog.innerHTML = pack + (rest ? `<p class="cat-sep">More Thick &amp; Quick shades</p>${rest}` : '');
   }
 
   function renderYarn() {
@@ -638,6 +642,7 @@
     if (i !== undefined) addOrSwapColor(CATALOG[+i]);
   });
   els.catSearch.addEventListener('input', renderCatalog);
+  els.packOnly.addEventListener('change', renderCatalog);
   els.customColor.addEventListener('change', () => {
     const hex = els.customColor.value;
     addOrSwapColor({ name: 'Custom ' + hex.toUpperCase(), code: '', hex: [hex] });
