@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blanket Planner</title>
+  <meta name="description" content="Design a crochet blanket on a grid sized to your yarn, hook and gauge.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='8' height='6' fill='%23b03b4a'/%3E%3Crect x='8' width='8' height='6' fill='%23ebe4d3'/%3E%3Crect y='6' width='8' height='6' fill='%23262f4e'/%3E%3Crect x='8' y='6' width='8' height='6' fill='%23c9962b'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <input id="projName" class="proj-name" value="My blanket" aria-label="Project name">
+    </div>
+    <div class="top-actions">
+      <button id="undoBtn" title="Undo (Ctrl+Z)">↶</button>
+      <button id="redoBtn" title="Redo (Ctrl+Shift+Z)">↷</button>
+      <button id="exportPng">Save PNG</button>
+      <button id="exportJson">Save file</button>
+      <label class="btn">Open file<input id="importJson" type="file" accept=".json,application/json" hidden></label>
+      <button id="newBtn" class="danger">New</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel left">
+      <section>
+        <h2>Blanket</h2>
+        <label>Size
+          <select id="sizePreset">
+            <option value="30x30">Lovey · 30 × 30 in</option>
+            <option value="36x48">Baby · 36 × 48 in</option>
+            <option value="50x60" selected>Throw · 50 × 60 in</option>
+            <option value="66x90">Twin · 66 × 90 in</option>
+            <option value="90x90">Queen · 90 × 90 in</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </label>
+        <div class="row2">
+          <label>Width (in)<input id="widthIn" type="number" min="4" max="200" step="1"></label>
+          <label>Length (in)<input id="heightIn" type="number" min="4" max="200" step="1"></label>
+        </div>
+        <label>Stitch
+          <select id="stitch">
+            <option value="sc">Single crochet (sc)</option>
+            <option value="moss">Moss / linen stitch</option>
+            <option value="hdc">Half double (hdc)</option>
+            <option value="dc">Double crochet (dc)</option>
+          </select>
+        </label>
+        <p class="stat" id="gridStat"></p>
+      </section>
+
+      <section>
+        <h2>Gauge</h2>
+        <p class="hint">Label: 6 sc × 8 rows = 4″ on a 9 mm hook. Adjusted for your hook below.</p>
+        <div class="row2">
+          <label>Your hook (mm)<input id="hookMm" type="number" min="2" max="30" step="0.25"></label>
+          <label>Label hook (mm)<input id="labelHookMm" type="number" min="2" max="30" step="0.25"></label>
+        </div>
+        <label class="check"><input id="useSwatch" type="checkbox"> I measured a swatch</label>
+        <div class="row2" id="swatchFields">
+          <label>sc per 4″<input id="swSts" type="number" min="1" max="40" step="0.1"></label>
+          <label>sc rows per 4″<input id="swRows" type="number" min="1" max="40" step="0.1"></label>
+        </div>
+        <p class="stat" id="gaugeStat"></p>
+      </section>
+
+      <section>
+        <h2>Yarn needed</h2>
+        <p class="hint">Rough estimate with a 10% cushion. 106 yd per skein.</p>
+        <div id="yarnTable"></div>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="toolbar" role="toolbar" aria-label="Tools">
+        <div class="tools" id="tools">
+          <button data-tool="brush" class="on" title="Brush (B)">✎ Brush</button>
+          <button data-tool="fill" title="Fill area (F)">◧ Fill</button>
+          <button data-tool="rect" title="Rectangle (R)">▭ Rect</button>
+          <button data-tool="line" title="Line (L)">╱ Line</button>
+          <button data-tool="pick" title="Pick color (I)">◉ Pick</button>
+          <button data-tool="mark" title="Mark stitch (M)">✕ Mark</button>
+          <button data-tool="erase" title="Erase to background (E)">⌫ Erase</button>
+          <button data-tool="pan" title="Scroll / pan (Space)">✋ Pan</button>
+        </div>
+        <div class="opts">
+          <label class="inline">Brush
+            <select id="brushSize"><option>1</option><option>2</option><option>3</option><option>5</option></select>
+          </label>
+          <label class="check inline"><input id="mirrorX" type="checkbox"> Mirror ↔</label>
+          <label class="check inline"><input id="mirrorY" type="checkbox"> Mirror ↕</label>
+          <label class="check inline"><input id="showGrid" type="checkbox" checked> Grid</label>
+          <label class="inline zoom">Zoom <input id="zoom" type="range" min="0.25" max="4" step="0.05" value="1"></label>
+          <button id="fitBtn">Fit</button>
+        </div>
+      </div>
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="canvas-inner" id="canvasInner">
+          <canvas id="rulerTop" class="ruler top"></canvas>
+          <canvas id="rulerLeft" class="ruler left"></canvas>
+          <canvas id="grid"></canvas>
+        </div>
+      </div>
+      <div class="status" id="status">Hover over the grid</div>
+    </section>
+
+    <aside class="panel right">
+      <section>
+        <h2>Your colors</h2>
+        <p class="hint">Click to paint with a color. The first color is the background. ⇄ swaps every stitch of that color to the next shade you pick.</p>
+        <div id="projColors" class="proj-colors"></div>
+      </section>
+
+      <section>
+        <h2>Thick &amp; Quick shades</h2>
+        <input id="catSearch" type="search" placeholder="Search shades…" aria-label="Search shades">
+        <div id="catalog" class="catalog"></div>
+        <label class="inline custom">Custom color <input id="customColor" type="color" value="#7a5c99"></label>
+        <p class="hint">Screen colors are approximate. Click a swatch's chip in “Your colors” to match it to your skein.</p>
+      </section>
+
+      <section>
+        <h2>Row by row</h2>
+        <div class="row-nav">
+          <button id="rowDown" title="Previous row">▼</button>
+          <label class="inline">Row <input id="rowNum" type="number" min="1" value="1"></label>
+          <button id="rowUp" title="Next row">▲</button>
+        </div>
+        <label class="check"><input id="crafting" type="checkbox"> Crafting mode (dim finished rows)</label>
+        <div id="rowReadout" class="readout"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="palette.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
