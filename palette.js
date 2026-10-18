@@ -1,6 +1,8 @@
 // Lion Brand Wool-Ease Thick & Quick (product 640) shades.
 // Hex values are screen approximations of each shade, not official values.
-// Shades with more than one hex are multis/heathers and draw as stripes.
+// Shades with more than one hex are multis/heathers/tweeds: the first hex is
+// the base and the rest are flecks. `fleck` is the share of flecked spots
+// (default 0.5); tweeds use a low value.
 // Edit a color's hex in the app to match your actual skein.
 window.YARN = {
   name: 'Wool-Ease Thick & Quick',
@@ -18,6 +20,7 @@ window.CATALOG = [
   { code: '099', name: 'Fisherman',   hex: ['#ebe4d3'] },
   { code: '123', name: 'Oatmeal',     hex: ['#d7c8ad', '#cbb99a'] },
   { code: '',    name: 'Wheat',       hex: ['#cdb07c'] },
+  { code: '124', name: 'Barley',      hex: ['#a98f66', '#ece4d3', '#3a2f26'], fleck: 0.08 },
   { code: '',    name: 'Driftwood',   hex: ['#a69c8c', '#8d8476'] },
   { code: '',    name: 'Grey Marble', hex: ['#a3a3a1', '#c4c4c2'] },
   { code: '',    name: 'Moonlight',   hex: ['#bfc5cc'] },
@@ -31,6 +34,7 @@ window.CATALOG = [
   { code: '',    name: 'Cranberry',   hex: ['#8b1f2d'] },
   { code: '146', name: 'Fig',         hex: ['#6a3e4e'] },
   { code: '141', name: 'Eggplant',    hex: ['#4a2c46'] },
+  { code: '144', name: 'Raisin',      hex: ['#3b2334', '#c9b48e', '#161214', '#ebe3d4'], fleck: 0.08 },
   // Oranges / yellows
   { code: '',    name: 'Spice',       hex: ['#a5512c'] },
   { code: '',    name: 'Butterscotch',hex: ['#d1892f'] },

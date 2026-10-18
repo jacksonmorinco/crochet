@@ -51,7 +51,11 @@
     return s;
   }
 
-  function copyColor(c) { return { name: c.name, code: c.code || '', hex: c.hex.slice() }; }
+  function copyColor(c) {
+    const o = { name: c.name, code: c.code || '', hex: c.hex.slice() };
+    if (c.fleck) o.fleck = c.fleck;
+    return o;
+  }
 
   function gauge(s) {
     if (s.useSwatch) return { sts: +s.swSts || YARN.gauge.sts, rows: +s.swRows || YARN.gauge.rows };
@@ -121,7 +125,7 @@
     const n = s.cols * s.rows;
     s.cells = unrle(o.cells, n);
     s.marks = unrle(o.marks, n);
-    s.colors = o.colors.map((c) => ({ name: String(c.name || 'Color'), code: String(c.code || ''), hex: (c.hex || ['#888888']).map(String) }));
+    s.colors = o.colors.map((c) => copyColor({ name: String(c.name || 'Color'), code: String(c.code || ''), hex: (c.hex || ['#888888']).map(String), fleck: +c.fleck || 0 }));
     for (let i = 0; i < n; i++) if (s.cells[i] >= s.colors.length) s.cells[i] = 0;
     if (!STITCHES[s.stitch]) s.stitch = 'sc';
     return s;
@@ -268,12 +272,12 @@
   const patternCache = new Map();
   function fillFor(c, target) {
     if (c.hex.length === 1) return c.hex[0];
-    const key = c.hex.join(',') + '@' + dpr.toFixed(2);
+    const key = c.hex.join(',') + '/' + (c.fleck || 0.5) + '@' + dpr.toFixed(2);
     let p = patternCache.get(key);
     if (!p) {
       // speckle so heathers/multis read like the yarn: mostly the first
       // shade, flecked with the others
-      const fleck = Math.max(1, Math.round(2 * dpr)), n = 16, size = fleck * n;
+      const fleck = Math.max(1, Math.round(1.5 * dpr)), n = 61, size = fleck * n;
       const off = document.createElement('canvas');
       off.width = off.height = size;
       const o = off.getContext('2d');
@@ -282,7 +286,7 @@
       const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       for (let y = 0; y < n; y++)
         for (let x = 0; x < n; x++) {
-          if (rand() < 0.5) continue;
+          if (rand() >= (c.fleck || 0.5)) continue;
           o.fillStyle = c.hex[1 + Math.floor(rand() * (c.hex.length - 1))];
           o.fillRect(x * fleck, y * fleck, fleck, fleck);
         }
@@ -618,7 +622,7 @@
       els.status.textContent = '';
       patternCache.clear();
     } else {
-      const existing = S.colors.findIndex((c) => c.name === col.name && c.hex.join() === col.hex.join());
+      const existing = S.colors.findIndex((c) => c.name === col.name);
       if (existing >= 0) { S.active = existing; }
       else {
         if (S.colors.length >= 250) return;
